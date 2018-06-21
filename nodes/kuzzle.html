@@ -1,0 +1,250 @@
+<script type="text/x-red" data-template-name="kuzzle">
+    <div class="form-row">
+        <label for="node-config-input-hostname"><i class="icon-tag"></i> Hostname</label>
+        <input type="text" id="node-config-input-hostname" placeholder="Hostname">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-port"><i class="icon-tag"></i> Port</label>
+        <input type="text" id="node-config-input-port" placeholder="Port">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-user"><i class="fa fa-user"></i> User</label>
+        <input type="text" id="node-config-input-user">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-password"><i class="fa fa-lock"></i> Password</label>
+        <input type="password" id="node-config-input-password">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-config-input-name" placeholder="Name">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="kuzzle">
+    <p></p>
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('kuzzle',{
+        category: 'config',
+        color: '#a6bbcf',
+        defaults: {
+            hostname: {value: "127.0.0.1", required: true},
+            port: {value: 7512, required: true},
+            name: {value:""}
+        },
+        credentials: {
+            user: {type: "text"},
+            password: {type: "password"}
+        },
+        label: function() {
+            return this.name || this.hostname + ":" + this.port + "/" + this.db;
+        }
+    });
+</script>
+
+
+<script type="text/x-red" data-template-name="kuzzle subscribe">
+    <div class="form-row">
+        <label for="node-input-kuzzle"><i class="fa fa-bookmark"></i> Kuzzle Server</label>
+        <input type="text" id="node-input-kuzzle">
+    </div>
+    <div class="form-row">
+        <label for="node-input-index"><i class="fa fa-briefcase"></i> Index</label>
+        <input type="text" id="node-input-index">
+    </div>
+    <div class="form-row">
+        <label for="node-input-collection"><i class="fa fa-briefcase"></i> Collection</label>
+        <input type="text" id="node-input-collection">
+    </div>
+    <div class="form-row">
+        <label for="node-input-filter"><i class="fa fa-briefcase"></i> Filter</label>
+        <input type="text" id="node-input-filter">
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red:common.label.name"></span></label>
+        <input type="text" id="node-input-name" data-i18n="[placeholder]node-red:common.label.name">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="kuzzle subscribe">
+    <p>Subcribes to a Kuzzle data collection</p>
+    <p>Set <code>msg.payload</code> as the filter of .subsbribe() function.<br/>
+    Optionally, you may also set a <code>msg.options</code> object as the options of the .subscribe() function
+    <p>See the <a href="https://docs.kuzzle.io/sdk-reference/collection/subscribe" target="new"><i>Kuzzle
+    subscribe method doc</i></a> for examples.</p>
+    <p>Results are returned in <code>msg.payload</code>.</p>
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('kuzzle subscribe',{
+        category: 'input',
+        color: '#a6bbcf',
+        defaults: {
+            kuzzle: {type: "kuzzle", required: true},
+            name: {value: ""},
+            index: {value: "", required: true},
+            collection: {value: "", required: true},
+            filter: { type:"object" }
+        },
+        inputs:1,
+        outputs:2,
+        label: function() {
+            return this.name||"Subscribe";
+        }
+    });
+</script>
+
+
+<script type="text/x-red" data-template-name="kuzzle publish message">
+    <div class="form-row">
+        <label for="node-input-kuzzle"><i class="fa fa-bookmark"></i> Kuzzle Server</label>
+        <input type="text" id="node-input-kuzzle">
+    </div>
+    <div class="form-row">
+        <label for="node-input-index"><i class="fa fa-briefcase"></i> Index</label>
+        <input type="text" id="node-input-index">
+    </div>
+    <div class="form-row">
+        <label for="node-input-collection"><i class="fa fa-briefcase"></i> Collection</label>
+        <input type="text" id="node-input-collection">
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red:common.label.name"></span></label>
+        <input type="text" id="node-input-name" data-i18n="[placeholder]node-red:common.label.name">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="kuzzle publish message">
+    <p>Publish a real-time message to a Kuzzle data collection</p>
+    <p>Set <code>msg.payload</code> as the message to publish.<br/>
+    Optionally, you may also set a <code>msg.options</code> object as the options of the .publish() function
+    <p>See the <a href="https://docs.kuzzle.io/sdk-reference/collection/subscribe" target="new"><i>Kuzzle
+    subscribe method doc</i></a> for examples.</p>
+    <p>Results are returned in <code>msg.payload</code>.</p>
+</script>
+
+
+<script type="text/javascript">
+    RED.nodes.registerType('kuzzle publish message',{
+        category: 'output',
+        color: '#a6bbcf',
+        defaults: {
+            kuzzle: {type: "kuzzle", required: true},
+            name: {value: ""}, 
+            index: {value: "", required: true},
+            collection: {value: "", required: true},
+        },
+        inputs:1,
+        outputs:0,
+        label: function() {
+            return this.name||"Kuzzle";
+        }
+    });
+</script>
+
+
+
+<script type="text/x-red" data-template-name="kuzzle save document">
+    <div class="form-row">
+        <label for="node-input-kuzzle"><i class="fa fa-bookmark"></i> Kuzzle Server</label>
+        <input type="text" id="node-input-kuzzle">
+    </div>
+    <div class="form-row">
+        <label for="node-input-index"><i class="fa fa-briefcase"></i> Index</label>
+        <input type="text" id="node-input-index">
+    </div>
+    <div class="form-row">
+        <label for="node-input-collection"><i class="fa fa-briefcase"></i> Collection</label>
+        <input type="text" id="node-input-collection">
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red:common.label.name"></span></label>
+        <input type="text" id="node-input-name" data-i18n="[placeholder]node-red:common.label.name">
+    </div>
+</script>
+
+
+
+<script type="text/x-red" data-template-name="kuzzle collection">
+    <div class="form-row">
+        <label for="node-input-kuzzle"><i class="fa fa-bookmark"></i> <span data-i18n="kuzzle.label.server"></span></label>
+        <input type="text" id="node-input-kuzzle">
+    </div>
+    <div class="form-row">
+        <label for="node-input-index"><i class="fa fa-briefcase"></i> <span data-i18n="kuzzle.label.index"></span></label>
+        <input type="text" id="node-input-index">
+    </div>
+    <div class="form-row">
+        <label for="node-input-collection"><i class="fa fa-briefcase"></i> <span data-i18n="kuzzle.label.collection"></span></label>
+        <input type="text" id="node-input-collection">
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red:common.label.name"></span></label>
+        <input type="text" id="node-input-name" data-i18n="[placeholder]node-red:common.label.name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-operation"><i class="fa fa-wrench"></i> <span data-i18n="kuzzle.label.operation"></span></label>
+        <select type="text" id="node-input-operation" style="display: inline-block; vertical-align: top;">
+            <option value="search">search</option>
+            <option value="count">count</option>
+            <option value="fetchDocument">fetchDocument</option>
+            <option value="save">save</option>
+            <option value="deleteDocument">deleteDocument</option>
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-from"><i class="fa fa-tag"></i> <span data-i18n="kuzzle.attributes.from"></span></label>
+        <input type="text" id="node-input-from" data-i18n="[placeholder]kuzzle.attributes.from">
+    </div>
+    <div class="form-row">
+        <label for="node-input-size"><i class="fa fa-tag"></i> <span data-i18n="kuzzle.attributes.size"></span></label>
+        <input type="text" id="node-input-size" data-i18n="[placeholder]kuzzle.attributes.size">
+    </div>
+    <div class="form-row">
+        <label for="node-input-autoloop"><i class="fa fa-tag"></i> <span data-i18n="kuzzle.attributes.autoloop"></span></label>
+        <input type="text" id="node-input-autoloop" data-i18n="[placeholder]kuzzle.attributes.size">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="kuzzle collection">
+    <p>Reads the contents of a file as either a string or binary buffer.</p>
+    <h3>Inputs</h3>
+    <dl class="message-properties">
+        <dt>payload <span class="property-type">Object</span></dt>
+        <dd>Main argument of SDK method to run (document/filter/document id)</dd>
+        <dt class="optional">options <span class="property-type">object</span></dt>
+        <dd>Options argument of SDK method to run (document/filter/document id)</dd>
+    </dl>
+    <h3>Outputs</h3>
+    <dl class="message-properties">
+        <dt>payload <span class="property-type">object</span></dt>
+        <dd>The result value of the SDK Method</dd>
+    </dl>
+    <h3>Details</h3>
+    <p>See the <a href="https://docs.kuzzle.io/sdk-reference/collection" target="new"><i>Kuzzle SDK
+    collection methods doc</i></a> for examples.</p>
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('kuzzle collection',{
+        category: 'storage-out',
+        color: '#a6bbcf',
+        defaults: {
+            kuzzle: {type: "kuzzle", required: true},
+            name: {value: ""}, 
+            index: {value: "", required: true},
+            collection: {value: "", required: true},
+            operation: {value: "search"},
+            from: {value: 0},
+            size: {value: 10},
+            autoloop: {value: true}
+        },
+        inputs:1,
+        outputs:1,
+        label: function() {
+            return this.name||"Kuzzle";
+        }
+    });
+</script>

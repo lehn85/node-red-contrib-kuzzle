@@ -1,0 +1,15 @@
+{
+    "kuzzle": {
+        "label": {
+            "server": "Kuzzle Server",
+            "index" : "Index",
+            "collection": "Collection",
+            "operation": "Operation"
+        },
+        "attributes": {
+            "from": "From",
+            "size" : "Size",
+            "autoloop": "Auto loop"
+        }
+    }
+}

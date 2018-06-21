@@ -1,2 +1,7 @@
 # node-red-contrib-kuzzle
-Kuzzle and Node red
+
+Node-RED nodes for Kuzzle including createDocument, publishMessage, search, count, subscribe
+
+## Current Status
+
+work in progess...
