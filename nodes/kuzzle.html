@@ -28,7 +28,7 @@
 <script type="text/javascript">
     RED.nodes.registerType('kuzzle',{
         category: 'config',
-        color: '#a6bbcf',
+        color: '#FFAAAA',
         defaults: {
             hostname: {value: "127.0.0.1", required: true},
             port: {value: 7512, required: true},
@@ -40,27 +40,25 @@
         },
         label: function() {
             return this.name || this.hostname + ":" + this.port + "/" + this.db;
-        }
+        },
+        paletteLabel: 'Kuzzle',
+        icon: "kuzzle.png"
     });
 </script>
 
 
 <script type="text/x-red" data-template-name="kuzzle subscribe">
     <div class="form-row">
-        <label for="node-input-kuzzle"><i class="fa fa-bookmark"></i> Kuzzle Server</label>
+        <label for="node-input-kuzzle"><i class="fa fa-bookmark"></i> <span data-i18n="kuzzle.label.server"></span></label>
         <input type="text" id="node-input-kuzzle">
     </div>
     <div class="form-row">
-        <label for="node-input-index"><i class="fa fa-briefcase"></i> Index</label>
+        <label for="node-input-index"><i class="fa fa-database"></i> <span data-i18n="kuzzle.label.index"></span></label>
         <input type="text" id="node-input-index">
     </div>
     <div class="form-row">
-        <label for="node-input-collection"><i class="fa fa-briefcase"></i> Collection</label>
+        <label for="node-input-collection"><i class="fa fa-briefcase"></i> <span data-i18n="kuzzle.label.collection"></span></label>
         <input type="text" id="node-input-collection">
-    </div>
-    <div class="form-row">
-        <label for="node-input-filter"><i class="fa fa-briefcase"></i> Filter</label>
-        <input type="text" id="node-input-filter">
     </div>
     <div class="form-row">
         <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red:common.label.name"></span></label>
@@ -70,44 +68,97 @@
 
 <script type="text/x-red" data-help-name="kuzzle subscribe">
     <p>Subcribes to a Kuzzle data collection</p>
-    <p>Set <code>msg.payload</code> as the filter of .subsbribe() function.<br/>
-    Optionally, you may also set a <code>msg.options</code> object as the options of the .subscribe() function
-    <p>See the <a href="https://docs.kuzzle.io/sdk-reference/collection/subscribe" target="new"><i>Kuzzle
-    subscribe method doc</i></a> for examples.</p>
-    <p>Results are returned in <code>msg.payload</code>.</p>
+    <p>Subcribes to Kuzzle data collection events</p>
+    <h3>Inputs</h3>
+    <dl class="message-properties">
+        <dt>payload <span class="property-type">Object</span></dt>
+        <dd>Subscribe filter</dd>
+        <dt class="optional">msg.options <span class="property-type">object</span></dt>
+        <dd>Options argument of subscribe method</dd>
+    </dl>
+    <h3>Properties</h3>
+    <dl class="message-properties">
+        <dt>Kuzzle <span class="property-type">Kuzzle Node</span></dt>
+        <dd>Kuzzle server node</dd>
+        <dt>Index <span class="property-type">String</span></dt>
+        <dd>Kuzzle index</dd>
+        <dt>Collection <span class="property-type">String</span></dt>
+        <dd>Kuzzle collection (within index)</dd>  
+    </dl>
+    <h3>Output 1: document notifications</h3>
+    <dl class="message-properties">
+        <dt>payload <span class="property-type">Kuzzle Document</span></dt>
+        <dd>Document</dd>
+        <dt>msg.controller<span class="property-type">String</span></dt>
+        <dd>Controller name</dd>
+        <dt>msg.volatile<span class="property-type">Object</span></dt>
+        <dd>Volatile data</dd>
+        <dt>msg.roomId<span class="property-type">String</span></dt>
+        <dd>roomId</dd>
+        <dt>msg.index<span class="property-type">String</span></dt>
+        <dd>Kuzzle index</dd>
+        <dt>msg.collection<span class="property-type">String</span></dt>
+        <dd>Kuzzle collection</dd>
+        <dt>msg.scope<span class="property-type">String</span></dt>
+        <dd>Indicates if the document enters or exits the subscription scope: in, out</dd>
+        <dt>msg.state<span class="property-type">String</span></dt>
+        <dd>Shows if the document is about to be changed, or if the change is done: pending, done</dd>
+    </dl>
+    <h3>Output 2: user notifications</h3>
+    <dl class="message-properties">
+        <dt>payload <span class="property-type">Integer</span></dt>
+        <dd>User count</dd>
+        <dt>msg.controller<span class="property-type">String</span></dt>
+        <dd>Controller name</dd>
+        <dt>msg.volatile<span class="property-type">Object</span></dt>
+        <dd>Volatile data</dd>
+        <dt>msg.roomId<span class="property-type">String</span></dt>
+        <dd>roomId</dd>
+        <dt>msg.user<span class="property-type"></span></dt>
+        <dd>Indicates if the user enters or leaves the subscribed room: in, out</dd>
+        <dt>msg.timestamp<span class="property-type">Integer</span></dt>
+        <dd>Timestamp</dd>
+    </dl>
+
+    <h3>Details</h3>
+    <p>See the <a href="https://docs.kuzzle.io/sdk-reference/collection/subscribe" target="new"><i>Kuzzle SDK
+    subsbribe method doc</i></a> for more details.</p>
+
 </script>
 
 <script type="text/javascript">
     RED.nodes.registerType('kuzzle subscribe',{
         category: 'input',
-        color: '#a6bbcf',
+        color: '#FFAAAA',
         defaults: {
             kuzzle: {type: "kuzzle", required: true},
             name: {value: ""},
             index: {value: "", required: true},
-            collection: {value: "", required: true},
-            filter: { type:"object" }
+            collection: {value: "", required: true}
         },
         inputs:1,
         outputs:2,
         label: function() {
             return this.name||"Subscribe";
-        }
+        },
+        paletteLabel: 'Kuzzle',
+        outputLabels: ["Document notifications","User notifications"],
+        icon: "kuzzle.png"
     });
 </script>
 
 
 <script type="text/x-red" data-template-name="kuzzle publish message">
     <div class="form-row">
-        <label for="node-input-kuzzle"><i class="fa fa-bookmark"></i> Kuzzle Server</label>
+        <label for="node-input-kuzzle"><i class="fa fa-bookmark"></i> <span data-i18n="kuzzle.label.server"></span></label>
         <input type="text" id="node-input-kuzzle">
     </div>
     <div class="form-row">
-        <label for="node-input-index"><i class="fa fa-briefcase"></i> Index</label>
+        <label for="node-input-index"><i class="fa fa-database"></i> <span data-i18n="kuzzle.label.index"></span></label>
         <input type="text" id="node-input-index">
     </div>
     <div class="form-row">
-        <label for="node-input-collection"><i class="fa fa-briefcase"></i> Collection</label>
+        <label for="node-input-collection"><i class="fa fa-briefcase"></i> <span data-i18n="kuzzle.label.collection"></span></label>
         <input type="text" id="node-input-collection">
     </div>
     <div class="form-row">
@@ -118,18 +169,32 @@
 
 <script type="text/x-red" data-help-name="kuzzle publish message">
     <p>Publish a real-time message to a Kuzzle data collection</p>
-    <p>Set <code>msg.payload</code> as the message to publish.<br/>
-    Optionally, you may also set a <code>msg.options</code> object as the options of the .publish() function
-    <p>See the <a href="https://docs.kuzzle.io/sdk-reference/collection/subscribe" target="new"><i>Kuzzle
-    subscribe method doc</i></a> for examples.</p>
-    <p>Results are returned in <code>msg.payload</code>.</p>
+    <h3>Inputs</h3>
+    <dl class="message-properties">
+        <dt>payload <span class="property-type">Object</span></dt>
+        <dd>Message content</dd>
+        <dt class="optional">msg.options <span class="property-type">object</span></dt>
+        <dd>Options argument of publishMessage method</dd>
+    </dl>
+    <h3>Properties</h3>
+    <dl class="message-properties">
+        <dt>Kuzzle <span class="property-type">Kuzzle Node</span></dt>
+        <dd>Kuzzle server node</dd>
+        <dt>Index <span class="property-type">String</span></dt>
+        <dd>Kuzzle index</dd>
+        <dt>Collection <span class="property-type">String</span></dt>
+        <dd>Kuzzle collection (within index)</dd>  
+    </dl>
+    <h3>Details</h3>
+    <p>See the <a href="https://docs.kuzzle.io/sdk-reference/collection/publish-message" target="new"><i>Kuzzle SDK
+    subsbribe method doc</i></a> for more details.</p>
 </script>
 
 
 <script type="text/javascript">
     RED.nodes.registerType('kuzzle publish message',{
         category: 'output',
-        color: '#a6bbcf',
+        color: '#FFAAAA',
         defaults: {
             kuzzle: {type: "kuzzle", required: true},
             name: {value: ""}, 
@@ -138,31 +203,13 @@
         },
         inputs:1,
         outputs:0,
+        align: 'right',
         label: function() {
             return this.name||"Kuzzle";
-        }
+        },
+        paletteLabel: 'Kuzzle',
+        icon: "kuzzle.png"
     });
-</script>
-
-
-
-<script type="text/x-red" data-template-name="kuzzle save document">
-    <div class="form-row">
-        <label for="node-input-kuzzle"><i class="fa fa-bookmark"></i> Kuzzle Server</label>
-        <input type="text" id="node-input-kuzzle">
-    </div>
-    <div class="form-row">
-        <label for="node-input-index"><i class="fa fa-briefcase"></i> Index</label>
-        <input type="text" id="node-input-index">
-    </div>
-    <div class="form-row">
-        <label for="node-input-collection"><i class="fa fa-briefcase"></i> Collection</label>
-        <input type="text" id="node-input-collection">
-    </div>
-    <div class="form-row">
-        <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red:common.label.name"></span></label>
-        <input type="text" id="node-input-name" data-i18n="[placeholder]node-red:common.label.name">
-    </div>
 </script>
 
 
@@ -173,7 +220,7 @@
         <input type="text" id="node-input-kuzzle">
     </div>
     <div class="form-row">
-        <label for="node-input-index"><i class="fa fa-briefcase"></i> <span data-i18n="kuzzle.label.index"></span></label>
+        <label for="node-input-index"><i class="fa fa-database"></i> <span data-i18n="kuzzle.label.index"></span></label>
         <input type="text" id="node-input-index">
     </div>
     <div class="form-row">
@@ -189,48 +236,107 @@
         <select type="text" id="node-input-operation" style="display: inline-block; vertical-align: top;">
             <option value="search">search</option>
             <option value="count">count</option>
-            <option value="fetchDocument">fetchDocument</option>
-            <option value="save">save</option>
-            <option value="deleteDocument">deleteDocument</option>
+            <option value="fetch">fetch document</option>
+            <option value="create">create document</option>
+            <option value="delete">delete document</option>
+            <option value="update">update document</option>
+            <option value="replace">replace document</option>
         </select>
     </div>
-    <div class="form-row">
-        <label for="node-input-from"><i class="fa fa-tag"></i> <span data-i18n="kuzzle.attributes.from"></span></label>
+    <div class="form-row node-input-from"">
+        <label for="node-input-from"><i class="fa fa-step-forward"></i> <span data-i18n="kuzzle.attributes.from"></span></label>
         <input type="text" id="node-input-from" data-i18n="[placeholder]kuzzle.attributes.from">
     </div>
-    <div class="form-row">
-        <label for="node-input-size"><i class="fa fa-tag"></i> <span data-i18n="kuzzle.attributes.size"></span></label>
+    <div class="form-row node-input-size">
+        <label for="node-input-size"><i class="fa fa-bars"></i> <span data-i18n="kuzzle.attributes.size"></span></label>
         <input type="text" id="node-input-size" data-i18n="[placeholder]kuzzle.attributes.size">
     </div>
-    <div class="form-row">
-        <label for="node-input-autoloop"><i class="fa fa-tag"></i> <span data-i18n="kuzzle.attributes.autoloop"></span></label>
-        <input type="text" id="node-input-autoloop" data-i18n="[placeholder]kuzzle.attributes.size">
+    <div class="form-row node-input-autoloop">
+        <label for="node-input-autoloop"><i class="fa fa-retweet"></i> <span data-i18n="kuzzle.attributes.autoloop"></span></label>
+        <input type="checkbox" id="node-input-autoloop" data-i18n="[placeholder]kuzzle.attributes.size">
     </div>
 </script>
 
 <script type="text/x-red" data-help-name="kuzzle collection">
-    <p>Reads the contents of a file as either a string or binary buffer.</p>
+    <p>Execute an operation on a Kuzzle data collection</p>
     <h3>Inputs</h3>
     <dl class="message-properties">
         <dt>payload <span class="property-type">Object</span></dt>
-        <dd>Main argument of SDK method to run (document/filter/document id)</dd>
-        <dt class="optional">options <span class="property-type">object</span></dt>
-        <dd>Options argument of SDK method to run (document/filter/document id)</dd>
+        <dd>Main argument of SDK method
+            <ul>
+                <li>Search, Count : filters</li>
+                <li>Create, Update, Replace document : Document content</li>
+                <li>Fetch document : Document ID</li>
+                <li>Delete document : Document ID or array of IDs</li>
+            </ul>
+        </dd>
+        <dt class="optional">msg.options <span class="property-type">object</span></dt>
+        <dd>Options argument of SDK method to run</dd>
+        <dt class="optional">msg.id <span class="property-type">string</span></dt>
+        <dd>Document ID optionnal for create document, mandatory for update and replace</dd>
+    </dl>
+    <h3>Properties</h3>
+    <dl class="message-properties">
+        <dt>Kuzzle <span class="property-type">Kuzzle Node</span></dt>
+        <dd>Kuzzle server node</dd>
+        <dt>Index <span class="property-type">String</span></dt>
+        <dd>Kuzzle index</dd>
+        <dt>Collection <span class="property-type">String</span></dt>
+        <dd>Kuzzle collection (within index)</dd>  
+        <dt>Operation <span class="property-type">String</span></dt>
+        <dd>Operation to execute</dd>  
+        <dt class="optional">From (search) <span class="property-type">Integer</span></dt>
+        <dd>Search from. Will be replaced by msg.options.from if set.</dd>
+        <dt class="optional">Size (search) <span class="property-type">Integer</span></dt>
+        <dd>Search pagination size. Will be replaced by msg.options.size if set.</dd>  
+        <dt class="optional">Scroll (search) <span class="property-type">Boolean</span></dt>
+        <dd>If true will automatically scroll over results. Will send one message per page.</dd>  
     </dl>
     <h3>Outputs</h3>
     <dl class="message-properties">
-        <dt>payload <span class="property-type">object</span></dt>
-        <dd>The result value of the SDK Method</dd>
+        <dt>payload <span class="property-type">Object, Array or Integer</span></dt>
+        <dd>Main result of SDK method
+            <ul>
+                <li>Search : Array of documents</li>
+                <li>Count : Count value</li>
+                <li>Create, Update, Replace, Fetch document : Document</li>                
+                <li>Delete document : Array of deleted document IDs</li>
+            </ul>
+        </dd>
+        <dt class="optional">msg.collection (search) <span class="property-type">string</span></dt>
+        <dd>Collection name</dd>
+        <dt class="optional">msg.fetched (search) <span class="property-type">integer</span></dt>
+        <dd>Number of fetched document so far</dd>
+        <dt class="optional">msg.total (search) <span class="property-type">integer</span></dt>
+        <dd>Total number of document</dd>
+        <dt class="optional">msg.filter (search) <span class="property-type">object</span></dt>
+        <dd>Filter sent to search query</dd>
+        <dt class="optional">msg.options (search) <span class="property-type">object</span></dt>
+        <dd>Options sent to search query</dd>
+        <dt class="optional">msg.aggregations (search) <span class="property-type">object</span></dt>
+        <dd>Aggregations object from search results</dd>
     </dl>
     <h3>Details</h3>
     <p>See the <a href="https://docs.kuzzle.io/sdk-reference/collection" target="new"><i>Kuzzle SDK
-    collection methods doc</i></a> for examples.</p>
+    collection methods doc</i></a> for more details.</p>
 </script>
 
 <script type="text/javascript">
+
+    function oneditprepare() {
+        $("#node-input-operation").change(function () {
+            var id = $("#node-input-operation option:selected").val();
+            if (id === "search") {
+                $(".node-input-from, .node-input-size, .node-input-autoloop").show();
+            } else {
+                $(".node-input-from, .node-input-size, .node-input-autoloop").hide();
+            }
+        });
+    }
+
     RED.nodes.registerType('kuzzle collection',{
         category: 'storage-out',
-        color: '#a6bbcf',
+        color: '#FFAAAA',
         defaults: {
             kuzzle: {type: "kuzzle", required: true},
             name: {value: ""}, 
@@ -239,12 +345,15 @@
             operation: {value: "search"},
             from: {value: 0},
             size: {value: 10},
-            autoloop: {value: true}
+            autoloop: {value: true, type:"boolean"}
         },
         inputs:1,
         outputs:1,
         label: function() {
             return this.name||"Kuzzle";
-        }
+        },
+        paletteLabel: 'Kuzzle',
+        oneditprepare: oneditprepare,
+        icon: "kuzzle.png"
     });
 </script>

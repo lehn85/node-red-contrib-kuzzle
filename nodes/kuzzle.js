@@ -3,6 +3,10 @@ module.exports = function (RED) {
     const Kuzzle = require('kuzzle-sdk');
  
 
+    /**
+     * Kuzzle node manages Kuzzle connexion
+     * @param {*} config 
+     */
     function KuzzleNode(config){
         RED.nodes.createNode(this, config);
         this.hostname = config.hostname;
@@ -23,15 +27,18 @@ module.exports = function (RED) {
         }
     });
 
+    /**
+     * Kuzzle Subscription Node
+     * @param {*} config 
+     */
     function KuzzleSubscribeNode(config){
+        let node = this;
         RED.nodes.createNode(this, config);  
-        this.index = config.index;
-        this.collectionName = config.collection;
         this.kuzzleNode = RED.nodes.getNode(config.kuzzle);
-        this.collection = this.kuzzleNode.kuzzle.collection(this.collectionName,this.index);
+        this.collection = this.kuzzleNode.kuzzle.collection(config.collection,config.index);
         this.subscriptionRoom = null;
 
-        let node = this;
+
         node.status({fill:"blue",shape:"dot",text:"waiting for filter"});
 
 
@@ -81,140 +88,101 @@ module.exports = function (RED) {
         this.on("close", () => {
             closeExistingSubscription();
         })
-
-
-
-
     }
 
     RED.nodes.registerType('kuzzle subscribe', KuzzleSubscribeNode);
 
+    /**
+     * Kuzzle Publish Message Node
+     * @param {*} config  
+     */
     function KuzzlePublishNode(config){
-        RED.nodes.createNode(this, config);  
-        this.index = config.index;
-        this.collectionName = config.collection;
-        this.kuzzleNode = RED.nodes.getNode(config.kuzzle);
-        this.collection = this.kuzzleNode.kuzzle.collection(this.collectionName,this.index);
-
         let node = this;
+        RED.nodes.createNode(this, config);  
+        this.kuzzleNode = RED.nodes.getNode(config.kuzzle);
+        this.collection = this.kuzzleNode.kuzzle.collection(config.collection,config.index);
 
         this.on("input", msg => {
             //subscribe based on msf payload as a filter
             node.collection.publishMessage(msg.payload,msg.options?msg.options:{},(err,result)=>{
-                //node.send({payload:result});
                 if (err) { node.error("Kuzzle publish message error",err)};
             });
         });
-
-        this.on("close", () => {
-            
-        })
     }
 
     RED.nodes.registerType('kuzzle publish message', KuzzlePublishNode);
 
     /**
-     * 
+     * Kuzzle Collection Methods Node
+     * createDocument, fetchDocument, deleteDocument, updateDocument, replaceDocument, search, count
      * @param {*} config 
      */
     function KuzzleCollectionNode(config) {
-        let node= this;
+        let node = this;
         RED.nodes.createNode(this, config);  
-        this.index = config.index;
-        this.collectionName = config.collection;
         this.kuzzleNode = RED.nodes.getNode(config.kuzzle);
-        this.collection = this.kuzzleNode.kuzzle.collection(this.collectionName,this.index);
+        this.collection = this.kuzzleNode.kuzzle.collection(config.collection,config.index);
         this.options = {};
-        this.extraParams = {};
-        this.extraParams.autoloop = config.autoloop;
-        
+        this.autoloop = config.autoloop;
+
+        // Prepare function specific options from node form config
+        // may be merged with msg.options
         switch(config.operation) {
             case 'search':  
-                this.function = doKuzzleSearch;
                 this.options.from = parseInt(config.from) || 0;
                 this.options.size = parseInt(config.size) || 10;
             break;
-            case 'count':
-                this.function = doKuzzleCount;                
-            break;
-            case 'save':
-                this.function = doCreateDocument;
+            case 'create':
                 this.options.ifExist = (config.ifExist=="replace")?"replace":false; 
                 this.options.refresh = (config.refresh=="wait_for")?"replace":null;
             break;
         }
 
+        // Runs the query on message input
         this.on("input", msg => {
-            //subscribe based on msf payload as a filter
-            let options = Object.assign({},this.options,msg.options||{});
-            let extraParams = Object.assign({},this.extraParams);
-            extraParams.id = msg.id?msg.id:null;
-            this.function(node,msg.payload,options,extraParams);
+            //merge msg options with config ones
+            let options = Object.assign({},node.options,msg.options||{});
+
+            switch(config.operation) {
+                case 'search':  
+                    node.collection.search(msg.payload, options, function getMoreUntilDone(err,result) {
+                        if (err) { node.error("Kuzzle search error"); return; }; 
+                        if (result === null) { return; }
+            
+                        node.send({
+                            aggregations: result.aggregations,
+                            collection: result.collection,
+                            fetched: result.fetched,
+                            options: result.options,
+                            filters: result.filters,
+                            total: result.total,
+                            payload: result.documents});
+            
+                        //fetch next document if autoloop activated
+                        if (node.autoloop) result.fetchNext(getMoreUntilDone);
+                    });
+                break;
+                case 'update':
+                case 'replace':
+                    if (!msg.id) { node.error("Missing mandatory msg.id input value"); return; }
+                case 'create':
+                    node.collection[config.operation+'Document'](msg.id?msg.id:null,msg.payload,options,(err,result)=>{
+                        if (err) { node.error("Kuzzle "+config.operation+" document error"); return;};
+                        node.send({payload:result});
+                    });
+                break;
+                case 'count':
+                case 'fetch':
+                case 'delete':
+                    node.collection[config.operation+'Document'](msg.payload,options,(err,result)=>{
+                        if (err) { node.error("Kuzzle "+config.operation+" document error"); return;};
+                        node.send({payload:result});
+                    });
+                break;
+                default:
+                    node.error("Unkown method "+config.operation);
+            }
         });
     }
-
-    /**
-     * runs a search query on Kuzzle
-     * @param node node
-     * @param Object ES Filter
-     * @param Object options
-     * @param Object extraParams
-     */
-    function doKuzzleSearch(node, filter, options, extraParams) {
-        node.collection.search(filter, options, function getMoreUntilDone(err,result) {
-            if (err) { node.error("Kuzzle collection error",err); return; }; 
-            if (result === null) { return; }
-
-            node.send({
-                aggregations: result.aggregations,
-                collection: result.collection,
-                fetched: result.fetched,
-                options: result.options,
-                filters: result.filters,
-                total: result.total,
-                payload: result.documents});
-
-            //fetch next document if autoloop activated
-            if (extraParams.autoloop) result.fetchNext(getMoreUntilDone);
-        });
-    }
-
-    /**
-     * runs a search query on Kuzzle
-     * @param node node
-     * @param Object ES Filter
-     * @param Object options
-     */
-    function doKuzzleCount(node, filter, options) {
-        node.collection.count(filter, options, (err,result) => {
-            if (err) { node.error("Kuzzle collection error",err); return; }; 
-            node.send({ payload: result});
-        });
-    }
-
-
-
-    /**
-     * create document using createDocument or mCreateDocument from SDK
-     * @param node node
-     * @param Object Array document
-     * @param Object options
-     * @param Object extraParams
-     */
-    function doCreateDocument(node, document, options, extraParams) {
-        if (Array.isArray(document)) {
-            //mCreate
-        } else {
-            //Create
-            node.collection.createDocument(extraParams.id,document,options,(err,result)=>{
-                if (err) { node.error("Kuzzle create document error",err)};
-                node.send({payload:result});
-            });
-        }
-    }
-
-
     RED.nodes.registerType('kuzzle collection', KuzzleCollectionNode);    
-
-
 };

@@ -9,7 +9,7 @@
         "attributes": {
             "from": "From",
             "size" : "Size",
-            "autoloop": "Auto loop"
+            "autoloop": "Scroll"
         }
     }
 }
