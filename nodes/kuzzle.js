@@ -15,7 +15,7 @@ module.exports = function (RED) {
 
         if (this.credentials && this.credentials.user && this.credentials.password) {
             this.kuzzle.login("local", {username: "username", password: "password"}, expiresIn, function (err, res) {
-                //todo manage errors
+                //todo manage errors  
             });
         }
 
@@ -37,12 +37,18 @@ module.exports = function (RED) {
         this.kuzzleNode = RED.nodes.getNode(config.kuzzle);
         this.collection = this.kuzzleNode.kuzzle.collection(config.collection,config.index);
         this.subscriptionRoom = null;
+        this.options = {
+            subscribeToSelf: config.subscribeToSelf,
+            scope: config.scope,
+            users: config.users,
+            state: config.state
+        }
 
 
         node.status({fill:"blue",shape:"dot",text:"waiting for filter"});
 
 
-        let closeExistingSubscription = function() {
+        function closeExistingSubscription() {
             if (node.subscriptionRoom) {
                 node.subscriptionRoom.unsubscribe();
                 node.status({fill:"blue",shape:"dot",text:"waiting for filter"});
@@ -53,8 +59,10 @@ module.exports = function (RED) {
             //close subscription if any
             closeExistingSubscription();
 
+            let options = Object.assign({},node.options,msg.options||{});
+
             //subscribe based on msf payload as a filter
-            node.collection.subscribe(msg.payload,msg.options?msg.options:{},(err,result)=>{
+            node.collection.subscribe(msg.payload,options,(err,result)=>{
                 let resultMsg = {};
                 resultMsg.controller = result.controller;
                 resultMsg.volatile = result.volatile;
@@ -123,7 +131,7 @@ module.exports = function (RED) {
         this.kuzzleNode = RED.nodes.getNode(config.kuzzle);
         this.collection = this.kuzzleNode.kuzzle.collection(config.collection,config.index);
         this.options = {};
-        this.autoloop = config.autoloop;
+        this.scroll = config.scroll;
 
         // Prepare function specific options from node form config
         // may be merged with msg.options
@@ -133,11 +141,11 @@ module.exports = function (RED) {
                 this.options.size = parseInt(config.size) || 10;
             break;
             case 'create':
-                this.options.ifExist = (config.ifExist=="replace")?"replace":false; 
-                this.options.refresh = (config.refresh=="wait_for")?"replace":null;
+                this.options.ifExist = (config.ifexist==="replace")?"replace":false; 
+                this.options.refresh = (config.refresh==="wait_for")?"wait_for":null;
             break;
         }
-
+        
         // Runs the query on message input
         this.on("input", msg => {
             //merge msg options with config ones
@@ -146,7 +154,7 @@ module.exports = function (RED) {
             switch(config.operation) {
                 case 'search':  
                     node.collection.search(msg.payload, options, function getMoreUntilDone(err,result) {
-                        if (err) { node.error("Kuzzle search error"); return; }; 
+                        if (err) { node.error("Kuzzle search "+err, msg); return; }; 
                         if (result === null) { return; }
             
                         node.send({
@@ -158,8 +166,8 @@ module.exports = function (RED) {
                             total: result.total,
                             payload: result.documents});
             
-                        //fetch next document if autoloop activated
-                        if (node.autoloop) result.fetchNext(getMoreUntilDone);
+                        //fetch next document if scroll activated
+                        if (node.scroll) result.fetchNext(getMoreUntilDone);
                     });
                 break;
                 case 'update':
@@ -167,15 +175,20 @@ module.exports = function (RED) {
                     if (!msg.id) { node.error("Missing mandatory msg.id input value"); return; }
                 case 'create':
                     node.collection[config.operation+'Document'](msg.id?msg.id:null,msg.payload,options,(err,result)=>{
-                        if (err) { node.error("Kuzzle "+config.operation+" document error"); return;};
+                        if (err) { node.error("Kuzzle "+config.operation+" document "+err, msg); return;};
+                        node.send({payload:result});
+                    });
+                break;
+                case 'fetch':
+                case 'delete':
+                    node.collection[config.operation+'Document'](msg.payload,options,(err,result)=>{
+                        if (err) { node.error("Kuzzle "+config.operation+" document "+err); return;};
                         node.send({payload:result});
                     });
                 break;
                 case 'count':
-                case 'fetch':
-                case 'delete':
-                    node.collection[config.operation+'Document'](msg.payload,options,(err,result)=>{
-                        if (err) { node.error("Kuzzle "+config.operation+" document error"); return;};
+                    node.collection[config.operation](msg.payload,options,(err,result)=>{
+                        if (err) { node.error("Kuzzle "+config.operation+" "+err, msg); return;};
                         node.send({payload:result});
                     });
                 break;

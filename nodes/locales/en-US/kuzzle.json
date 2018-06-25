@@ -9,7 +9,22 @@
         "attributes": {
             "from": "From",
             "size" : "Size",
-            "autoloop": "Scroll"
+            "scroll": "Scroll",
+            "subscribeToSelf": "Subscribe To Self",
+            "scope": "Scope",
+            "users": "Users",
+            "state": "State",
+            "ifExist": "If Exist",
+            "refresh": "Refresh"
+        },
+        "operation": {
+            "search": "Search",
+            "fetch": "Fetch Document",
+            "count": "Count",
+            "create": "Create Document",
+            "replace": "Replace Document",
+            "delete": "Delete",
+            "update": "Update Document"
         }
     }
 }

@@ -64,6 +64,42 @@
         <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red:common.label.name"></span></label>
         <input type="text" id="node-input-name" data-i18n="[placeholder]node-red:common.label.name">
     </div>
+
+    <div class="form-row node-input-subscribeToSelf">
+        <label for="node-input-subscribeToSelf"><i class="fa fa-retweet"></i> <span data-i18n="kuzzle.attributes.subscribeToSelf"></span></label>
+        <input type="checkbox" id="node-input-subscribeToSelf">
+    </div>
+
+    <div class="form-row">
+        <label for="node-input-scope"><i class="fa fa-check-square"></i> <span data-i18n="kuzzle.attributes.scope"></span></label>
+        <select type="text" id="node-input-scope" style="display: inline-block; vertical-align: top;">
+            <option value="all">all</option>
+            <option value="in">in</option>
+            <option value="out">out</option>
+            <option value="none">none</option>
+        </select>
+    </div>
+
+
+    <div class="form-row">
+        <label for="node-input-state"><i class="fa fa-check"></i> <span data-i18n="kuzzle.attributes.state"></span></label>
+        <select type="text" id="node-input-state" style="display: inline-block; vertical-align: top;">
+            <option value="done">done</option>
+            <option value="pending">pending</option>
+            <option value="all">all</option>
+        </select>
+    </div>
+
+    <div class="form-row">
+        <label for="node-input-users"><i class="fa fa-users"></i> <span data-i18n="kuzzle.attributes.users"></span></label>
+        <select type="text" id="node-input-users" style="display: inline-block; vertical-align: top;">
+            <option value="all">all</option>
+            <option value="in">in</option>
+            <option value="out">out</option>
+            <option value="none">none</option>
+        </select>
+    </div>
+
 </script>
 
 <script type="text/x-red" data-help-name="kuzzle subscribe">
@@ -134,7 +170,11 @@
             kuzzle: {type: "kuzzle", required: true},
             name: {value: ""},
             index: {value: "", required: true},
-            collection: {value: "", required: true}
+            collection: {value: "", required: true},
+            scope: {default:"all"},
+            users: {default:"none"},
+            subscribeToSelf: {default:true, type:"boolean"},
+            state: {default:"done"}
         },
         inputs:1,
         outputs:2,
@@ -205,7 +245,7 @@
         outputs:0,
         align: 'right',
         label: function() {
-            return this.name||"Kuzzle";
+            return this.name||"Publish Message";
         },
         paletteLabel: 'Kuzzle',
         icon: "kuzzle.png"
@@ -251,9 +291,23 @@
         <label for="node-input-size"><i class="fa fa-bars"></i> <span data-i18n="kuzzle.attributes.size"></span></label>
         <input type="text" id="node-input-size" data-i18n="[placeholder]kuzzle.attributes.size">
     </div>
-    <div class="form-row node-input-autoloop">
-        <label for="node-input-autoloop"><i class="fa fa-retweet"></i> <span data-i18n="kuzzle.attributes.autoloop"></span></label>
-        <input type="checkbox" id="node-input-autoloop" data-i18n="[placeholder]kuzzle.attributes.size">
+    <div class="form-row node-input-scroll">
+        <label for="node-input-scroll"><i class="fa fa-retweet"></i> <span data-i18n="kuzzle.attributes.scroll"></span></label>
+        <input type="checkbox" id="node-input-scroll" data-i18n="[placeholder]kuzzle.attributes.size">
+    </div>
+    <div class="form-row node-input-ifexist">
+        <label for="node-input-ifexist"><i class="fa fa-wrench"></i> <span data-i18n="kuzzle.attributes.ifExist"></span></label>
+        <select type="text" id="node-input-ifexist" style="display: inline-block; vertical-align: top;">
+            <option value="error">Error</option>
+            <option value="replace">Replace</option>
+        </select>
+    </div>
+    <div class="form-row node-input-refresh">
+        <label for="node-input-refresh"><i class="fa fa-wrench"></i> <span data-i18n="kuzzle.attributes.refresh"></span></label>
+        <select type="text" id="node-input-refresh" style="display: inline-block; vertical-align: top;">
+            <option value="false">false</option>
+            <option value="wait_for">wait for</option>
+        </select>
     </div>
 </script>
 
@@ -261,13 +315,13 @@
     <p>Execute an operation on a Kuzzle data collection</p>
     <h3>Inputs</h3>
     <dl class="message-properties">
-        <dt>payload <span class="property-type">Object</span></dt>
+        <dt>payload <span class="property-type">Object or String</span></dt>
         <dd>Main argument of SDK method
             <ul>
                 <li>Search, Count : filters</li>
                 <li>Create, Update, Replace document : Document content</li>
                 <li>Fetch document : Document ID</li>
-                <li>Delete document : Document ID or array of IDs</li>
+                <li>Delete document : Document ID or filter</li>
             </ul>
         </dd>
         <dt class="optional">msg.options <span class="property-type">object</span></dt>
@@ -291,6 +345,10 @@
         <dd>Search pagination size. Will be replaced by msg.options.size if set.</dd>  
         <dt class="optional">Scroll (search) <span class="property-type">Boolean</span></dt>
         <dd>If true will automatically scroll over results. Will send one message per page.</dd>  
+        <dt class="optional">If Exists (create) <span class="property-type">String</span></dt>
+        <dd>If the same document already exists: resolves to an error. Replaces the existing document if set to replace.</dd>  
+        <dt class="optional">Refresh (create) <span class="property-type">Boolean</span></dt>
+        <dd>If set to wait for, Kuzzle will wait for the persistence layer to finish indexing (available with Elasticsearch 5.x and above).</dd>  
     </dl>
     <h3>Outputs</h3>
     <dl class="message-properties">
@@ -327,9 +385,14 @@
         $("#node-input-operation").change(function () {
             var id = $("#node-input-operation option:selected").val();
             if (id === "search") {
-                $(".node-input-from, .node-input-size, .node-input-autoloop").show();
+                $(".node-input-from, .node-input-size, .node-input-scroll").show();
+                $(".node-input-refresh, .node-input-ifexist").hide();
+            } else if (id === "create") {
+                $(".node-input-refresh, .node-input-ifexist").show();
+                $(".node-input-from, .node-input-size, .node-input-scroll").hide();
             } else {
-                $(".node-input-from, .node-input-size, .node-input-autoloop").hide();
+                $(".node-input-refresh, .node-input-ifexist").hide();
+                $(".node-input-from, .node-input-size, .node-input-scroll").hide();
             }
         });
     }
@@ -345,12 +408,14 @@
             operation: {value: "search"},
             from: {value: 0},
             size: {value: 10},
-            autoloop: {value: true, type:"boolean"}
+            scroll: {value: true, type:"boolean"},
+            refresh: {value: "false"},
+            ifexist: {value: "error"}
         },
         inputs:1,
         outputs:1,
         label: function() {
-            return this.name||"Kuzzle";
+            return this.name || this._("kuzzle.operation."+this.operation);
         },
         paletteLabel: 'Kuzzle',
         oneditprepare: oneditprepare,
