@@ -1,5 +1,4 @@
 # Official Node Red contribution for Kuzzle
-======
 
 ## About Kuzzle
 

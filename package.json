@@ -16,5 +16,12 @@
   },
   "dependencies": {
     "kuzzle-sdk": "^5.0"
-  }
+  },
+  "keywords": [ 
+    "kuzzle",
+    "node-red", 
+    "baas",
+    "backend",
+    "realtime",
+    "advanced search" ]
 }
