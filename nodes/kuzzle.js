@@ -9,16 +9,34 @@ module.exports = function (RED) {
      */
     function KuzzleNode(config){
         RED.nodes.createNode(this, config);
+        let node = this;
         this.hostname = config.hostname;
         this.port = config.port;
-        this.kuzzle = new Kuzzle(this.hostname,{port:this.port, autoQueue:true, autoReplay:true});
+        this.kuzzle = new Kuzzle(this.hostname,{port:this.port, autoQueue:true, autoReplay:true},()=> {
+            if (this.credentials && this.credentials.user && this.credentials.password) {
+                this.kuzzle.login("local", {username: this.credentials.user, password: this.credentials.password}, function (err, res) {
+                    if (err) { node.error("Kuzzle login " + err); return; }; 
+                });
+            }
+        });
 
-        if (this.credentials && this.credentials.user && this.credentials.password) {
-            this.kuzzle.login("local", {username: "username", password: "password"}, expiresIn, function (err, res) {
-                //todo manage errors  
-            });
-        }
 
+        //On close node
+        this.on('close', done => {
+            node.kuzzle.disconnect();
+            done();
+        })
+
+        //Kuzzle Listeners
+        this.kuzzle.addListener('connected', ()=> {
+            node.emit('connected');
+        });
+        this.kuzzle.addListener('disconnected', ()=> {
+            node.emit('connected');
+        });
+        this.kuzzle.addListener('reconnected', ()=> {
+            node.emit('connected');
+        });
     }
     RED.nodes.registerType('kuzzle', KuzzleNode, {
         credentials: {
@@ -59,6 +77,9 @@ module.exports = function (RED) {
             //close subscription if any
             closeExistingSubscription();
 
+            //If msg.unsubscribe then stop execution
+            if (msg.unsubscribe) return;
+
             let options = Object.assign({},node.options,msg.options||{});
 
             //subscribe based on msf payload as a filter
@@ -90,11 +111,17 @@ module.exports = function (RED) {
                 }
                 node.status({fill:"green",shape:"dot",text:"connected"});
                 node.subscriptionRoom = room;
+
+                //Send the first count of the subscripbtion room
+                room.count(function(err,result)  { 
+                    node.send([null,null,{payload:result}]) })
+                
             });
         });
 
-        this.on("close", () => {
+        this.on("close", done => {
             closeExistingSubscription();
+            done()
         })
     }
 
@@ -196,6 +223,7 @@ module.exports = function (RED) {
                     node.error("Unkown method "+config.operation);
             }
         });
+
     }
     RED.nodes.registerType('kuzzle collection', KuzzleCollectionNode);    
 };

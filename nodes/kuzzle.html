@@ -111,6 +111,8 @@
         <dd>Subscribe filter</dd>
         <dt class="optional">msg.options <span class="property-type">object</span></dt>
         <dd>Options argument of subscribe method</dd>
+        <dt class="optional">msg.unsubscribe <span class="property-type">object</span></dt>
+        <dd>If set, cancels the current subscription</dd>
     </dl>
     <h3>Properties</h3>
     <dl class="message-properties">
@@ -177,12 +179,12 @@
             state: {default:"done"}
         },
         inputs:1,
-        outputs:2,
+        outputs:3,
         label: function() {
             return this.name||"Subscribe";
         },
         paletteLabel: 'Kuzzle',
-        outputLabels: ["Document notifications","User notifications"],
+        outputLabels: ["Document notifications","User notifications","Initial room count"],
         icon: "kuzzle.png"
     });
 </script>
