@@ -157,6 +157,11 @@
         <dt>msg.timestamp<span class="property-type">Integer</span></dt>
         <dd>Timestamp</dd>
     </dl>
+    <h3>Output 3: initial count</h3>
+    <dl class="message-properties">
+        <dt>payload <span class="property-type">Integer</span></dt>
+        <dd>User count at subscribe</dd>
+    </dl>
 
     <h3>Details</h3>
     <p>See the <a href="https://docs.kuzzle.io/sdk-reference/collection/subscribe" target="new"><i>Kuzzle SDK
@@ -348,7 +353,7 @@
         <dt class="optional">Scroll (search) <span class="property-type">Boolean</span></dt>
         <dd>If true will automatically scroll over results. Will send one message per page.</dd>  
         <dt class="optional">If Exists (create) <span class="property-type">String</span></dt>
-        <dd>If the same document already exists: resolves to an error. Replaces the existing document if set to replace.</dd>  
+        <dd>If the same document already exists: resolves to an error. Replaces the existing document if set to replace (msg.id required in that case).</dd>  
         <dt class="optional">Refresh (create) <span class="property-type">Boolean</span></dt>
         <dd>If set to wait for, Kuzzle will wait for the persistence layer to finish indexing (available with Elasticsearch 5.x and above).</dd>  
     </dl>

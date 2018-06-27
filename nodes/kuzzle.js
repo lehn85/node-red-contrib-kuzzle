@@ -84,7 +84,7 @@ module.exports = function (RED) {
 
             //subscribe based on msf payload as a filter
             node.collection.subscribe(msg.payload,options,(err,result)=>{
-                let resultMsg = {};
+                let resultMsg = Object.assign({},msg);
                 resultMsg.controller = result.controller;
                 resultMsg.volatile = result.volatile;
                 resultMsg.roomId = result.roomId;
@@ -114,7 +114,8 @@ module.exports = function (RED) {
 
                 //Send the first count of the subscripbtion room
                 room.count(function(err,result)  { 
-                    node.send([null,null,{payload:result}]) })
+                    let resultMsg = Object.assign({},msg,{payload:result});
+                    node.send([null,null,resultMsg]) })
                 
             });
         });
@@ -184,14 +185,14 @@ module.exports = function (RED) {
                         if (err) { node.error("Kuzzle search "+err, msg); return; }; 
                         if (result === null) { return; }
             
-                        node.send({
+                        node.send(Object.assign({},msg,{
                             aggregations: result.aggregations,
                             collection: result.collection,
                             fetched: result.fetched,
                             options: result.options,
                             filters: result.filters,
                             total: result.total,
-                            payload: result.documents});
+                            payload: result.documents}));
             
                         //fetch next document if scroll activated
                         if (node.scroll) result.fetchNext(getMoreUntilDone);
@@ -203,20 +204,20 @@ module.exports = function (RED) {
                 case 'create':
                     node.collection[config.operation+'Document'](msg.id?msg.id:null,msg.payload,options,(err,result)=>{
                         if (err) { node.error("Kuzzle "+config.operation+" document "+err, msg); return;};
-                        node.send({payload:result});
+                        node.send(Object.assign({},msg,{payload:result}));
                     });
                 break;
                 case 'fetch':
                 case 'delete':
                     node.collection[config.operation+'Document'](msg.payload,options,(err,result)=>{
                         if (err) { node.error("Kuzzle "+config.operation+" document "+err); return;};
-                        node.send({payload:result});
+                        node.send(Object.assign({},msg,{payload:result}));
                     });
                 break;
                 case 'count':
                     node.collection[config.operation](msg.payload,options,(err,result)=>{
                         if (err) { node.error("Kuzzle "+config.operation+" "+err, msg); return;};
-                        node.send({payload:result});
+                        node.send(Object.assign({},msg,{payload:result}));
                     });
                 break;
                 default:
