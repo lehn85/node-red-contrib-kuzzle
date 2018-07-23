@@ -11,10 +11,24 @@ module.exports = function (RED) {
         RED.nodes.createNode(this, config);
         let node = this;
         this.hostname = config.hostname;
-        this.port = config.port;
-        this.kuzzle = new Kuzzle(this.hostname,{port:this.port, autoQueue:true, autoReplay:true},()=> {
+
+        this.options = {
+            port: config.port,
+            autoQueue: config.autoQueue,
+            autoReconnect: config.autoReconnect,
+            autoReplay: config.autoReplay,
+            autoResubscribe: config.autoResubscribe,
+            sslConnection: config.sslConnection,
+            queueTTL: config.queueTTL,
+            queueMaxSize: config.queueMaxSize,
+            replayInterval: config.replayInterval,
+            reconnectionDelay: config.reconnectionDelay
+        }
+
+        this.kuzzle = new Kuzzle(this.hostname,this.options,()=> {
             if (this.credentials && this.credentials.user && this.credentials.password) {
-                this.kuzzle.login("local", {username: this.credentials.user, password: this.credentials.password}, function (err, res) {
+                //expiry set up at 1y waiting for Kuzzle SDK v6 to upgrade with better deconnection handling or api token
+                this.kuzzle.login("local", {username: this.credentials.user, password: this.credentials.password}, "1y", function (err, res) {
                     if (err) { node.error("Kuzzle login " + err); return; }; 
                 });
             }
@@ -36,6 +50,12 @@ module.exports = function (RED) {
         });
         this.kuzzle.addListener('reconnected', ()=> {
             node.emit('connected');
+        });
+        this.kuzzle.addListener('tokenExpired', ()=> {
+            //Reconnect user
+            this.kuzzle.login("local", {username: this.credentials.user, password: this.credentials.password}, "1y", function (err, res) {
+                if (err) { node.error("Kuzzle login " + err); return; }; 
+            });
         });
     }
     RED.nodes.registerType('kuzzle', KuzzleNode, {

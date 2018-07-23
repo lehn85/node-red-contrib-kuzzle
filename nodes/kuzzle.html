@@ -1,11 +1,21 @@
 <script type="text/x-red" data-template-name="kuzzle">
     <div class="form-row">
+        <label for="node-config-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-config-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
         <label for="node-config-input-hostname"><i class="icon-tag"></i> Hostname</label>
         <input type="text" id="node-config-input-hostname" placeholder="Hostname">
     </div>
     <div class="form-row">
         <label for="node-config-input-port"><i class="icon-tag"></i> Port</label>
         <input type="text" id="node-config-input-port" placeholder="Port">
+    </div>
+    <div class="form-row">
+        <label>&nbsp;</label>
+        <input type="checkbox" id="node-config-input-sslConnection" style="display: inline-block; width: auto; vertical-align: top;">
+        <label for="node-config-input-sslConnection" style="width:70%"><span data-i18n="kuzzle.attributes.sslConnection"></span></label>
+        
     </div>
     <div class="form-row">
         <label for="node-config-input-user"><i class="fa fa-user"></i> User</label>
@@ -16,13 +26,81 @@
         <input type="password" id="node-config-input-password">
     </div>
     <div class="form-row">
-        <label for="node-config-input-name"><i class="icon-tag"></i> Name</label>
-        <input type="text" id="node-config-input-name" placeholder="Name">
+        <label>&nbsp;</label>
+        <input type="checkbox" id="node-config-input-autoReconnect" style="display: inline-block; width: auto; vertical-align: top;">
+        <label for="node-config-input-autoReconnect" style="width:70%"> <span data-i18n="kuzzle.attributes.autoReconnect"></span></label>
+    </div>
+    <div class="form-row">
+        <label>&nbsp;</label>
+        <input type="checkbox" id="node-config-input-autoQueue" style="display: inline-block; width: auto; vertical-align: top;">
+        <label for="node-config-input-autoQueue" style="width:70%"> <span data-i18n="kuzzle.attributes.autoQueue"></span></label>
+        
+    </div>
+    <div class="form-row">
+        <label>&nbsp;</label>
+        <input type="checkbox" id="node-config-input-autoReplay" style="display: inline-block; width: auto; vertical-align: top;">
+        <label for="node-config-input-autoReplay" style="width:70%"><span data-i18n="kuzzle.attributes.autoReplay"></span></label>
+    </div>
+    <div class="form-row">
+        <label>&nbsp;</label>
+        <input type="checkbox" id="node-config-input-autoResubscribe" style="display: inline-block; width: auto; vertical-align: top;">
+        <label for="node-config-input-autoResubscribe" style="width:70%"><span data-i18n="kuzzle.attributes.autoResubscribe"></span></label>
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-queueTTL"><span data-i18n="kuzzle.attributes.queueTTL"></span></label>
+        <input type="text" id="node-config-input-queueTTL">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-ri"><span data-i18n="kuzzle.attributes.queueMaxSize"></span></label>
+        <input type="text" id="node-config-input-queueMaxSize">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-replayInterval"><span data-i18n="kuzzle.attributes.replayInterval"></span></label>
+        <input type="text" id="node-config-input-replayInterval">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-reconnectionDelay"><span data-i18n="kuzzle.attributes.reconnectionDelay"></span></label>
+        <input type="text" id="node-config-input-reconnectionDelay">
     </div>
 </script>
 
 <script type="text/x-red" data-help-name="kuzzle">
-    <p></p>
+    <p>Kuzzle server</p>
+    <p>Connects to a Kuzzle server</p>
+    <h3>Properties</h3>
+    <dl class="message-properties">
+        <dt>Hostname <span class="property-type">String</span></dt>
+        <dd>Kuzzle hostname or IP</dd>
+        <dt>Port <span class="property-type">Integer</span></dt>
+        <dd>Kuzzle network port</dd>
+        <dt>SSL Connection <span class="property-type">Boolean</span></dt>
+        <dd>Switch Kuzzle connection to SSL mode</dd>  
+        <dt class="optional">User <span class="property-type">String</span></dt>
+        <dd>Username</dd>  
+        <dt class="optional">Password <span class="property-type">String</span></dt>
+        <dd>Password</dd>  
+        <dt>autoQueue <span class="property-type">Boolean</span></dt>
+        <dd>Automatically queue all requests during offline mode</dd>  
+        <dt>autoReconnect <span class="property-type">Boolean</span></dt>
+        <dd>Automatically reconnect after a connection loss</dd>  
+        <dt>autoReplay <span class="property-type">Boolean</span></dt>
+        <dd>Automatically replay queued requests on a reconnected event</dd>  
+        <dt>autoResubscribe <span class="property-type">Boolean</span></dt>
+        <dd>Automatically renew all subscriptions on a reconnected event</dd>  
+        <dt>queueTTL <span class="property-type">Integer</span></dt>
+        <dd>Time a queued request is kept during offline mode, in milliseconds</dd>
+        <dt>queueMaxSize <span class="property-type">Integer</span></dt>
+        <dd>Number of maximum requests kept during offline mode</dd>
+        <dt>replayInterval <span class="property-type">Integer</span></dt>
+        <dd>Delay between each replayed requests, in milliseconds</dd>
+        <dt>reconnectionDelay <span class="property-type">Integer</span></dt>
+        <dd>number of milliseconds between reconnection attempts</dd>
+    </dl>
+
+    <h3>Details</h3>
+    <p>See the <a href="https://docs.kuzzle.io/sdk-reference/kuzzle" target="new"><i>Kuzzle SDK documentation
+    </i></a> for more details.</p>
+
 </script>
 
 <script type="text/javascript">
@@ -31,15 +109,24 @@
         color: '#FFAAAA',
         defaults: {
             hostname: {value: "127.0.0.1", required: true},
-            port: {value: 7512, required: true},
-            name: {value:""}
+            port: {value: 7512, required: true, validate:RED.validators.number()},
+            name: {value:""},
+            autoQueue: {value: false},
+            autoReconnect: {value: true},
+            autoReplay: {value: false},
+            autoResubscribe: {value: true},
+            sslConnection: {value: false},
+            queueTTL: {value: 120000, validate:RED.validators.number(), required: true},
+            queueMaxSize: {value: 500, validate:RED.validators.number(), required: true},
+            replayInterval: {value: 10, validate:RED.validators.number(), required: true},
+            reconnectionDelay: {value: 1000, validate:RED.validators.number(), required: true}
         },
         credentials: {
             user: {type: "text"},
             password: {type: "password"}
         },
         label: function() {
-            return this.name || this.hostname + ":" + this.port + "/" + this.db;
+            return this.name || this.hostname + ":" + this.port;
         },
         paletteLabel: 'Kuzzle',
         icon: "kuzzle.png"
@@ -66,8 +153,9 @@
     </div>
 
     <div class="form-row node-input-subscribeToSelf">
-        <label for="node-input-subscribeToSelf"><i class="fa fa-retweet"></i> <span data-i18n="kuzzle.attributes.subscribeToSelf"></span></label>
-        <input type="checkbox" id="node-input-subscribeToSelf">
+        <label>&nbsp;</label>
+        <input type="checkbox" id="node-input-subscribeToSelf" style="display: inline-block; width: auto; vertical-align: top;">
+        <label for="node-input-subscribeToSelf" style="width:70%"><i class="fa fa-retweet"></i> <span data-i18n="kuzzle.attributes.subscribeToSelf"></span></label>
     </div>
 
     <div class="form-row">
@@ -178,10 +266,10 @@
             name: {value: ""},
             index: {value: "", required: true},
             collection: {value: "", required: true},
-            scope: {default:"all"},
-            users: {default:"none"},
-            subscribeToSelf: {default:true, type:"boolean"},
-            state: {default:"done"}
+            scope: {value:"all"},
+            users: {value:"none"},
+            subscribeToSelf: {value:true},
+            state: {value:"done"}
         },
         inputs:1,
         outputs:3,
@@ -300,7 +388,7 @@
     </div>
     <div class="form-row node-input-scroll">
         <label for="node-input-scroll"><i class="fa fa-retweet"></i> <span data-i18n="kuzzle.attributes.scroll"></span></label>
-        <input type="checkbox" id="node-input-scroll" data-i18n="[placeholder]kuzzle.attributes.size">
+        <input type="checkbox" id="node-input-scroll">
     </div>
     <div class="form-row node-input-ifexist">
         <label for="node-input-ifexist"><i class="fa fa-wrench"></i> <span data-i18n="kuzzle.attributes.ifExist"></span></label>
@@ -413,9 +501,9 @@
             index: {value: "", required: true},
             collection: {value: "", required: true},
             operation: {value: "search"},
-            from: {value: 0},
-            size: {value: 10},
-            scroll: {value: true, type:"boolean"},
+            from: {value: 0, validate:RED.validators.number()},
+            size: {value: 10, validate:RED.validators.number()},
+            scroll: {value: true},
             refresh: {value: "false"},
             ifexist: {value: "error"}
         },

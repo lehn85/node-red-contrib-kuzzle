@@ -15,7 +15,17 @@
             "users": "Users",
             "state": "State",
             "ifExist": "If Exist",
-            "refresh": "Refresh"
+            "refresh": "Refresh",
+            "autoQueue":"Auto Queue",
+            "autoReconnect":"Auto Reconnect",
+            "autoReplay":"Auto Replay",
+            "autoResubscribe":"Auto Resubscribe",
+            "sslConnection":"SSL Connection",
+            "queueTTL":"Queue TTL",
+            "queueMaxSize":"Queue Max Size",
+            "replayInterval":"Replay Interval",
+            "reconnectionDelay":"Reconnection Delay",
+            "offlineMode": "Offline Mode"
         },
         "operation": {
             "search": "Search",
