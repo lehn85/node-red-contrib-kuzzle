@@ -15,7 +15,7 @@
     }
   },
   "dependencies": {
-    "kuzzle-sdk": "^5.0"
+    "kuzzle-sdk": "^7.0"
   },
   "keywords": [
     "kuzzle",
